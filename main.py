@@ -10,14 +10,19 @@ Download: https://education.lego.com/en-us/support/mindstorms-ev3/python-for-ev3
 Building instructions can be found at:
 https://education.lego.com/en-us/support/mindstorms-ev3/building-instructions#robot
 """
-
+import logging
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import Motor, UltrasonicSensor, ColorSensor, GyroSensor
-from pybricks.parameters import Port, Button, Color, ImageFile, SoundFile
+from pybricks.parameters import Port, Button, Color, ImageFile, SoundFile, Stop
 from pybricks.robotics import DriveBase
 from ucollections import namedtuple
 from pybricks.tools import wait, StopWatch, DataLog
 
+# Logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)5s: %(message)s')
+log = logging.getLogger(__name__)
+log.info("Starting Program")
 
 
 def jason_run():
@@ -56,22 +61,36 @@ def sophie_run():
     sophie_run_basket_ball()
 
 
+
 def sophie_run_basket_ball():
     # basketball- 27 in. forward - <3 90 degree turn left - 34 inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
     #drive straight
     #robot.settings(straight_speed=450, straight_acceleration=150, turn_rate=10, turn_acceleration=10)
-    robot.straight(-685.8)
-    robot.stop()
+    #robot.straight(-685.8)
+    #robot.stop()
+
     #robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=100, turn_acceleration=150)
     
     #turn 90 to face the 
-    robot.turn(90)
-    robot.stop()
-    angle = robot.angle()
-    robot.turn(90)
-    robot.stop()
+    angle=abs(gyro_sensor.angle())
+
+    print("gyro angle start: ", gyro_sensor.angle())
+    gyro_sensor.reset_angle(0)
+    print("gyro angle reset: ", gyro_sensor.angle())
+    print("turning motor: ")
     
-    robot.turn(90)
+    
+    while( angle <90):
+        #robot.turn(45)
+        left_motor.run_target(900,360)
+    
+        angle= abs(gyro_sensor.angle())
+        print("gyro angle end : ", angle)
+        
+        
+        
+        
+    wait(1000)
     robot.stop()
     
 
@@ -125,6 +144,33 @@ def debug_print(*args, **kwargs):
 
 
 #start ############################################################ 
+GYRO_CALIBRATION_LOOP_COUNT = 10
+GYRO_OFFSET_FACTOR = 0.0005
+
+def calibrate_gyro_offset():
+    global gyro_offset
+
+    # Calibrate the gyro offset. This makes sure that the robot is perfectly
+    # still by making sure that the measured rate does not fluctuate more than
+    # 2 deg/s. Gyro drift can cause the rate to be non-zero even when the robot
+    # is not moving, so we save that value for use later.
+    while True:
+        gyro_minimum_rate, gyro_maximum_rate = 440, -440
+        gyro_sum = 0
+        for iteration in range(GYRO_CALIBRATION_LOOP_COUNT):
+            gyro_sensor_value = gyro_sensor.speed()
+            gyro_sum += gyro_sensor_value
+            if gyro_sensor_value > gyro_maximum_rate:
+                gyro_maximum_rate = gyro_sensor_value
+            if gyro_sensor_value < gyro_minimum_rate:
+                gyro_minimum_rate = gyro_sensor_value
+            log.debug("Calibrating gyro iteration: {:2d}, gyro_sum: {:4.2f}, gyro_minimum_rate: {:4.2f}, gyro_maximum_rate: {:4.2f}".format(
+            iteration, gyro_sum, gyro_minimum_rate, gyro_maximum_rate))
+            wait(5)
+        if gyro_maximum_rate - gyro_minimum_rate < 2:
+            break
+    gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
+    print("gyro_offset:",gyro_offset);
 
 
 
@@ -139,15 +185,11 @@ frnt_left_motor = Motor(Port.B)
 frnt_right_motor = Motor(Port.A) 
 
 gyro_sensor = GyroSensor(Port.S3)
-color_sensor1 = ColorSensor(Port.S4)
-color_sensor2 = ColorSensor(Port.S2)
-color_sensor3 = ColorSensor(Port.S1)
+color_sensor = ColorSensor(Port.S1)
 
 
 
-
-GYRO_CALIBRATION_LOOP_COUNT = 200
-GYRO_OFFSET_FACTOR = 0.0005
+calibrate_gyro_offset();
 
 # Actions will be used to change which way the robot drives.
 Action = namedtuple('Action ', ['drive_speed', 'steering'])
@@ -166,26 +208,6 @@ left_motor.reset_angle(0)
 right_motor.reset_angle(0)
 
 
-# Calibrate the gyro offset. This makes sure that the robot is perfectly
-# still by making sure that the measured rate does not fluctuate more than
-# 2 deg/s. Gyro drift can cause the rate to be non-zero even when the robot
-# is not moving, so we save that value for use later.
-# while True:
-#     gyro_minimum_rate, gyro_maximum_rate = 440, -440
-#     gyro_sum = 0
-#     for _ in range(GYRO_CALIBRATION_LOOP_COUNT):
-#         gyro_sensor_value = gyro_sensor.speed()
-#         gyro_sum += gyro_sensor_value
-#         if gyro_sensor_value > gyro_maximum_rate:
-#             gyro_maximum_rate = gyro_sensor_value
-#         if gyro_sensor_value < gyro_minimum_rate:
-#             gyro_minimum_rate = gyro_sensor_value
-#         wait(5)
-#     if gyro_maximum_rate - gyro_minimum_rate < 2:
-#         break
-# gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
-
-
 # Initialize the drive base.
 robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 
@@ -195,13 +217,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 print('Hello Gen R !')
 
 
-color1 = color_sensor1.color()
-print(color1)
-
-color2 = color_sensor2.color()
-print(color2)
-
-color = color_sensor3.color()
+color = color_sensor.color()
 print(color)
 
 
@@ -219,7 +235,8 @@ if(color==Color.BLUE):
 if(color==Color.RED):
     print("Sophie Run")
     sophie_run()
-
+else:
+    sophie_run()
 
 # Turn clockwise by 360 degrees and back again.
 # robot.turn(360)
