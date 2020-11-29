@@ -61,39 +61,109 @@ def sophie_run():
     sophie_run_basket_ball()
 
 
+def turn_robot_in_place(direction,angle):
+    current_gyro_angle=abs(gyro_sensor.angle())
 
+    print("gyro angle start: ", gyro_sensor.angle())
+    gyro_sensor.reset_angle(0)
+    print("gyro angle reset: ", gyro_sensor.angle())
+    print("turning motor: ")
+
+    left_direction = 1
+    right_direction =-1
+
+    if(direction=="RIGHT_BACKWARD" or direction=="LEFT_FORWARD"):
+        right_direction = -1
+        left_direction = 1
+    if(direction=="RIGHT_FORWARD" or direction=="LEFT_BACKWARDS"):
+        right_direction = 1
+        left_direction = -1
+    
+    angle_we_want=angle
+    #robot.turn(45)
+    while( current_gyro_angle <angle_we_want*0.85):
+        #
+        left_motor.run(200*left_direction)
+        right_motor.run(200*right_direction)
+        wait(10)
+        current_gyro_angle= abs(gyro_sensor.angle())
+        print("gyro angle end1 : ", current_gyro_angle)
+    
+    while( current_gyro_angle <angle_we_want*0.99):
+        #
+        left_motor.run(100*left_direction)
+        right_motor.run(100*right_direction)
+        wait(10)    
+        current_gyro_angle= abs(gyro_sensor.angle())
+        print("gyro angle end2 : ", current_gyro_angle)
+
+    left_motor.stop()
+    right_motor.stop()
+
+def turn_robot(direction,angle):
+    current_gyro_angle=abs(gyro_sensor.angle())
+
+    print("gyro angle start: ", gyro_sensor.angle())
+    gyro_sensor.reset_angle(0)
+    print("gyro angle reset: ", gyro_sensor.angle())
+    print("turning motor: ")
+
+    motor = left_motor
+
+    if(direction=="RIGHT_BACKWARD"):
+        motor = left_motor
+        direction = 1
+    if(direction=="RIGHT_FORWARD"):
+        motor = left_motor
+        direction=-1
+    if(direction=="LEFT_BACKWARD"):
+        motor = right_motor
+        direction = 1
+    if(direction=="LEFT_FORWARD"):
+        motor = right_motor 
+        direction=-1
+    
+    angle_we_want=angle
+    #robot.turn(45)
+    while( current_gyro_angle <angle_we_want*0.90):
+        #
+        motor.run(direction*200)
+        current_gyro_angle= abs(gyro_sensor.angle())
+        print("gyro angle end1 : ", current_gyro_angle)
+        wait(10)
+    
+    #motor.hold()
+    wait(10)
+    current_gyro_angle= abs(gyro_sensor.angle())
+        
+    while( current_gyro_angle <angle_we_want*0.99):
+        #
+        motor.run(direction*200)
+        current_gyro_angle= abs(gyro_sensor.angle())
+        print("gyro angle end2 : ", current_gyro_angle)
+        wait(10)
+    
+    motor.stop()
+        
 def sophie_run_basket_ball():
-    # basketball- 27 in. forward - <3 90 degree turn left - 34 inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
+    # basketball- 27 in. forward - <3 90 degree turn left - inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
     #drive straight
     #robot.settings(straight_speed=450, straight_acceleration=150, turn_rate=10, turn_acceleration=10)
     #robot.straight(-685.8)
     #robot.stop()
 
     #robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=100, turn_acceleration=150)
-    
+
+
+    #turn right forwards 
+
     #turn 90 to face the 
-    angle=abs(gyro_sensor.angle())
-
-    print("gyro angle start: ", gyro_sensor.angle())
-    gyro_sensor.reset_angle(0)
-    print("gyro angle reset: ", gyro_sensor.angle())
-    print("turning motor: ")
-    
-    
-    while( angle <90):
-        #robot.turn(45)
-        left_motor.run_target(900,360)
-    
-        angle= abs(gyro_sensor.angle())
-        print("gyro angle end : ", angle)
+    turn_robot_in_place("LEFT_FORWARD",90)    
         
         
         
-        
-    wait(1000)
+    wait(10)
     robot.stop()
-    
-
 
 
 def jolene_run():
@@ -173,6 +243,7 @@ def calibrate_gyro_offset():
     print("gyro_offset:",gyro_offset);
 
 
+######## MAIN PROGRAM ##########
 
 # Initialize the EV3 Brick.
 ev3 = EV3Brick()
@@ -189,7 +260,7 @@ color_sensor = ColorSensor(Port.S1)
 
 
 
-calibrate_gyro_offset();
+calibrate_gyro_offset()
 
 # Actions will be used to change which way the robot drives.
 Action = namedtuple('Action ', ['drive_speed', 'steering'])
@@ -235,6 +306,7 @@ if(color==Color.BLUE):
 if(color==Color.RED):
     print("Sophie Run")
     sophie_run()
+
 else:
     sophie_run()
 
