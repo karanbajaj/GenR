@@ -56,6 +56,32 @@ def jason_start_slide():
     robot.straight(-812.8)
     robot.stop()
 
+def jason_step_counter():
+    #turn_robot_in_place("RIGHT_BACKWARD",90)
+    #go forwrd fast
+    robot.settings(straight_speed=400, straight_acceleration=70, turn_rate=10, turn_acceleration=10)
+    robot.straight(-1016)
+    ev3.speaker.beep()
+    robot.stop()
+
+    # # push step counter - super slow to blue 
+    robot.settings(straight_speed=30, straight_acceleration=20, turn_rate=10, turn_acceleration=10)
+    robot.straight(-280.4)
+    robot.stop()
+
+    # #step back from the step counter 
+    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(50)
+    robot.stop()
+
+    # #turn left 
+    turn_robot_in_place("RIGHT_BACKWARD",90)
+    #drive forward
+    robot.straight(300)
+
+    robot.straight(-800)
+
+    robot.stop()
 
 def sophie_run():
     sophie_run_basket_ball()
@@ -67,6 +93,7 @@ def turn_robot_in_place(direction,angle):
     print("gyro angle start: ", gyro_sensor.angle())
     gyro_sensor.reset_angle(0)
     print("gyro angle reset: ", gyro_sensor.angle())
+    current_gyro_angle=abs(gyro_sensor.angle())
     print("turning motor: ")
 
     left_direction = 1
@@ -75,7 +102,7 @@ def turn_robot_in_place(direction,angle):
     if(direction=="RIGHT_BACKWARD" or direction=="LEFT_FORWARD"):
         right_direction = -1
         left_direction = 1
-    if(direction=="RIGHT_FORWARD" or direction=="LEFT_BACKWARDS"):
+    if(direction=="RIGHT_FORWARD" or direction=="LEFT_BACKWARD"):
         right_direction = 1
         left_direction = -1
     
@@ -145,6 +172,43 @@ def turn_robot(direction,angle):
     
     motor.stop()
         
+def follow_line(line_color_sensor,distance,direction):
+    PROPORTIONAL_GAIN = 1.2
+    BLACK = 9
+    WHITE = 85
+    threshold = (BLACK + WHITE) / 2
+   
+    distance_travelled = 0
+    direction_multiplier = -1
+    if(direction=="BACKWARDS"):
+        direction_multiplier = 1
+
+    DRIVE_SPEED = direction_multiplier*200
+
+    print("Follow black line")
+    while distance_travelled<distance:
+        # Calculate the deviation from the threshold.
+        deviation = line_color_sensor.reflection() - threshold
+        # Calculate the turn rate.
+        turn_rate = PROPORTIONAL_GAIN * deviation
+        # Set the drive base speed and turn rate.
+        robot.drive(DRIVE_SPEED, turn_rate)
+        # You can wait for a short time or do other things in this loop.
+        distance_travelled  = abs(robot.distance())
+        print("distance travelled:",distance_travelled)
+        wait(10)
+    # while distance_travelled<distance:
+    #     # Calculate the deviation from the threshold.
+    #     deviation = line_color_sensor.reflection() - threshold
+    #     # Calculate the turn rate.
+    #     turn_rate = PROPORTIONAL_GAIN * deviation
+    #     # Set the drive base speed and turn rate.
+    #     robot.drive(DRIVE_SPEED, turn_rate)
+    #     # You can wait for a short time or do other things in this loop.
+    #     distance_travelled  = abs(robot.distance())
+    #     print("distance travelled:",distance_travelled)
+    #     wait(10)
+
 def sophie_run_basket_ball():
     # basketball- 27 in. forward - <3 90 degree turn left - inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
     #drive straight
@@ -168,41 +232,43 @@ def sophie_run_basket_ball():
 
 def jolene_run():
     #go forwrd fast
-    robot.settings(straight_speed=400, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
-    robot.straight(-1016)
-    ev3.speaker.beep()
-    robot.stop()
+    # robot.settings(straight_speed=400, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
+    # robot.straight(-1016)
+    # ev3.speaker.beep()
+    # robot.stop()
 
-    # push step counter - super slow to blue 
-    robot.settings(straight_speed=30, straight_acceleration=20, turn_rate=10, turn_acceleration=10)
-    robot.straight(-370.4)
-    robot.stop()
+    # # push step counter - super slow to blue 
+    # robot.settings(straight_speed=30, straight_acceleration=20, turn_rate=10, turn_acceleration=10)
+    # robot.straight(-370.4)
+    # robot.stop()
 
-    #step back from the step counter 
-    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(306.4)
-    robot.stop()
+    # #step back from the step counter 
+    # robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    # robot.straight(306.4)
+    # robot.stop()
 
-    #turn left 
-    robot.turn(30)
-    robot.stop()
+    # #turn left 
+    # robot.turn(30)
+    # robot.stop()
     #drive straight
-    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(-595)
-    robot.stop()
-    #turn right
-    robot.turn(-30)
-    robot.stop()
+    # robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    # robot.straight(-595)
+    # robot.stop()
+    # #turn right
+    # robot.turn(-30)
+    # robot.stop()
     #drive upto treadmill
-    robot.straight(-593.4)
+    robot.straight(-2293.4)
     ev3.speaker.beep()
     robot.stop()
 
     #right motor turn
     frnt_right_motor.run_target(500, 4000)
+    robot.stop()
 
 def jolene_test():
-    frnt_right_motor.run_target(500, 3,468)
+    follow_line(line_sensor_right,1450,"FORWARD")
+    #frnt_right_motor.run_target(500, 3,468)
 
 
 
@@ -257,7 +323,8 @@ frnt_right_motor = Motor(Port.A)
 
 gyro_sensor = GyroSensor(Port.S3)
 color_sensor = ColorSensor(Port.S1)
-
+line_sensor_left = ColorSensor(Port.S4)
+line_sensor_right = ColorSensor(Port.S2)
 
 
 calibrate_gyro_offset()
@@ -297,7 +364,8 @@ print(color)
 
 if(color==Color.WHITE):
     print("Jolene Run")
-    jolene_run()
+    #jolene_run()
+    jolene_test()
 if(color==Color.BLUE):
     print("Jason Run")
     jason_run()
@@ -308,7 +376,7 @@ if(color==Color.RED):
     sophie_run()
 
 else:
-    sophie_run()
+    jason_step_counter()
 
 # Turn clockwise by 360 degrees and back again.
 # robot.turn(360)
