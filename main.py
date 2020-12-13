@@ -280,11 +280,20 @@ def sophie_run_basket_ball():
 
     #robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=100, turn_acceleration=150)
 
+    robot.settings(straight_speed=500, straight_acceleration=150, turn_rate=10, turn_acceleration=10)
+    
+    #drive fwd
+    robot.straight(-350)
+    robot.stop()
+    #turn 90 to face the hoop and drive towards
+    turn_robot_in_place("LEFT",90)    
+    robot.stop()
 
-    #turn right forwards 
-
-    #turn 90 to face the 
-    turn_robot_in_place("LEFT_FORWARD",90)    
+    robot.straight(-500)
+    robot.stop()
+    #turn robot to face the basketball mission
+    turn_robot_in_place("LEFT",30)
+    robot.stop()
         
         
         
