@@ -24,6 +24,8 @@ logging.basicConfig(level=logging.DEBUG,
 log = logging.getLogger(__name__)
 log.info("Starting Program")
 
+data = DataLog('time', 'angle', name='my_file', timestamp=False, extension='txt')
+start_gyro_value =0
 
 def jason_run():
     jason_start_slide()
@@ -89,12 +91,12 @@ def sophie_run():
 
 def turn_robot_in_place(direction,angle):
     current_gyro_angle=abs(gyro_sensor.angle())
-
-    print("gyro angle start: ", gyro_sensor.angle())
+    data.log("turn_robot_in_place:gyro value:",gyro_sensor.angle())
+    print("turn_robot_in_place:gyro angle start: ", gyro_sensor.angle())
     gyro_sensor.reset_angle(0)
     print("gyro angle reset: ", gyro_sensor.angle())
     current_gyro_angle=abs(gyro_sensor.angle())
-    print("turning motor: ")
+    print("turn_robot_in_place::turning motor: ")
 
     left_direction = 1
     right_direction =-1
@@ -106,7 +108,17 @@ def turn_robot_in_place(direction,angle):
         right_direction = 1
         left_direction = -1
     
+    print("turn_robot_in_place::direction: ",direction)
+
     angle_we_want=angle
+    
+    print("turn_robot_in_place::current_gyro_angle: ",current_gyro_angle)
+    print("turn_robot_in_place::angle: ",angle)
+    print("turn_robot_in_place::angle_we_want: ",angle_we_want)
+    data.log("turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
+    data.log("turn_robot_in_place:angle_we_want:",angle_we_want)
+    
+
     #robot.turn(45)
     while( current_gyro_angle <angle_we_want*0.85):
         #
@@ -115,6 +127,8 @@ def turn_robot_in_place(direction,angle):
         wait(10)
         current_gyro_angle= abs(gyro_sensor.angle())
         print("gyro angle end1 : ", current_gyro_angle)
+        data.log("0.85:turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
+        data.log("0.85:turn_robot_in_place:angle_we_want:",angle_we_want)
     
     while( current_gyro_angle <angle_we_want*0.99):
         #
@@ -123,6 +137,8 @@ def turn_robot_in_place(direction,angle):
         wait(10)    
         current_gyro_angle= abs(gyro_sensor.angle())
         print("gyro angle end2 : ", current_gyro_angle)
+        data.log("0.99:turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
+        data.log("0.99:turn_robot_in_place:angle_we_want:",angle_we_want)
 
     left_motor.stop()
     right_motor.stop()
@@ -177,7 +193,8 @@ def follow_line(line_color_sensor,distance,direction):
     BLACK = 9
     WHITE = 85
     threshold = (BLACK + WHITE) / 2
-   
+    global start_gyro_value
+
     distance_travelled = 0
     direction_multiplier = -1
     if(direction=="BACKWARDS"):
@@ -185,7 +202,7 @@ def follow_line(line_color_sensor,distance,direction):
 
     DRIVE_SPEED = direction_multiplier*200
 
-    print("Follow black line")
+    data.log("Follow black line")
     while distance_travelled<distance:
         # Calculate the deviation from the threshold.
         deviation = line_color_sensor.reflection() - threshold
@@ -196,6 +213,14 @@ def follow_line(line_color_sensor,distance,direction):
         # You can wait for a short time or do other things in this loop.
         distance_travelled  = abs(robot.distance())
         print("distance travelled:",distance_travelled)
+        data.log("distance travelled:",distance_travelled)
+        gyro_angle = gyro_sensor.angle()
+        
+        if(start_gyro_value==0 and gyro_angle!=0):
+            start_gyro_value = gyro_angle
+            data.log("start gyro value:",gyro_angle)
+
+        data.log("gyro value:",gyro_angle)
         wait(10)
     # while distance_travelled<distance:
     #     # Calculate the deviation from the threshold.
@@ -258,17 +283,69 @@ def jolene_run():
     # robot.turn(-30)
     # robot.stop()
     #drive upto treadmill
-    robot.straight(-2293.4)
-    ev3.speaker.beep()
-    robot.stop()
+    #go staright till wtge black linwe
+    
+    #get gyro value
+    global start_gyro_value
 
-    #right motor turn
-    frnt_right_motor.run_target(500, 4000)
+    robot.settings(straight_speed=400, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(-150)
     robot.stop()
+    gyro_sensor.reset_angle(0)
+    start_gyro_value = gyro_sensor.angle()
+    print("start gyro value: ",start_gyro_value)
+    data.log("start_gyro_value",start_gyro_value)
+
+
+    follow_line(line_sensor_right,1775,"FORWARD")
+    
+    #get the gyro value to see where we are
+    end_gyro_value =  gyro_sensor.angle()
+    
+    robot.stop()
+    data.log("start gyro_alue",start_gyro_value)
+    data.log("end gyro value",end_gyro_value)
+
+    ev3.speaker.beep()
+   
+    
+    #strIGHTEN THE ROBOT
+    gyro_angle_diff = end_gyro_value - start_gyro_value
+    direction = "LEFT_FORWARD"
+    if(gyro_angle_diff<0):
+        direction="RIGHT_FORWARD"
+
+    data.log("gyro angle diff ",gyro_angle_diff)
+    data.log("direction",direction)
+
+    turn_robot_in_place(direction,abs(gyro_angle_diff))
+    robot.stop()
+    #ROBOT GO FORWARD
+    robot.straight(-160)
+    robot.stop()
+    #right motor turn
+    frnt_right_motor.run_target(5000, 3500)
+    robot.stop()
+    #going backward 
+    robot.straight(150)
+    robot.stop()
+    #turn obot 35 degrees
+    turn_robot_in_place("LEFT_FORWARD",28)
+    robot.stop()
+    #go torwards row machine
+    robot.straight(-260)
+    robot.stop()
+    #bring down the hook
+    frnt_left_motor.run_target(500, -1100)
+    robot.straight(150)
+    robot.stop()
+    turn_robot_in_place("LEFT_FORWARD",30)
+    robot.straight(60)
 
 def jolene_test():
-    follow_line(line_sensor_right,1450,"FORWARD")
+    #follow_line(line_sensor_right,1450,"FORWARD")
     #frnt_right_motor.run_target(500, 3,468)
+    frnt_left_motor.run_target(500, -900)
 
 
 
@@ -280,7 +357,7 @@ def debug_print(*args, **kwargs):
 
 
 #start ############################################################ 
-GYRO_CALIBRATION_LOOP_COUNT = 10
+GYRO_CALIBRATION_LOOP_COUNT = 20
 GYRO_OFFSET_FACTOR = 0.0005
 
 def calibrate_gyro_offset():
@@ -306,7 +383,7 @@ def calibrate_gyro_offset():
         if gyro_maximum_rate - gyro_minimum_rate < 2:
             break
     gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
-    print("gyro_offset:",gyro_offset);
+    print("gyro_offset:",gyro_offset)
 
 
 ######## MAIN PROGRAM ##########
@@ -327,7 +404,7 @@ line_sensor_left = ColorSensor(Port.S4)
 line_sensor_right = ColorSensor(Port.S2)
 
 
-calibrate_gyro_offset()
+#calibrate_gyro_offset()
 
 # Actions will be used to change which way the robot drives.
 Action = namedtuple('Action ', ['drive_speed', 'steering'])
@@ -364,19 +441,19 @@ print(color)
 
 if(color==Color.WHITE):
     print("Jolene Run")
-    #jolene_run()
-    jolene_test()
-if(color==Color.BLUE):
+    jolene_run()
+    #jolene_test()
+elif(color==Color.BLUE):
     print("Jason Run")
     jason_run()
 #
 #jolene_test()
-if(color==Color.RED):
+elif(color==Color.RED):
     print("Sophie Run")
     sophie_run()
 
 else:
-    jason_step_counter()
+    jolene_run()
 
 # Turn clockwise by 360 degrees and back again.
 # robot.turn(360)
