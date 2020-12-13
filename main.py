@@ -28,7 +28,7 @@ log.info("Starting Program")
 data = DataLog('time', 'angle', name='my_file', timestamp=False, extension='txt')
 start_gyro_value =0
 
-################# robot functions
+#region robot functions
 def turn_robot_left_in_place(angle):
     turn_robot_in_place("LEFT",angle)
 
@@ -155,7 +155,7 @@ def follow_line(line_color_sensor,distance,direction,speed):
     direction_multiplier = -1
 
     
-    if(direction=="BACKWARDS"):
+    if(direction=="BACKWARD"):
         direction_multiplier = 1
      
     drive_speed= 200   
@@ -194,7 +194,6 @@ def follow_line(line_color_sensor,distance,direction,speed):
         wait(10)
     return
     
-
 def drive_straight_with_gyro(distance,direction="FORWARD"):
     # drive for 10 ms
     # check gyro 
@@ -227,10 +226,10 @@ def drive_straight_with_gyro(distance,direction="FORWARD"):
         print("gyro value:",gyro_angle)
         wait(10)
     return
-#################
+#endregion
 
-#################runs
-
+#region runs
+# region jason's runs
 def jason_run():
     #jason_start_slide()
     jason_step_counter()
@@ -292,10 +291,8 @@ def jason_step_counter():
         turn_robot_in_place("RIGHT",45)
         current_try=current_try+1
 
-
-
-
-
+#endregion
+#region sophies runs
 def sophie_run():
     sophie_run_basket_ball()
 
@@ -327,7 +324,8 @@ def sophie_run_basket_ball():
         
     wait(10)
     robot.stop()
-
+#endregion
+#region  jolene's run
 def jolene_run():
     #go forwrd fast
     # robot.settings(straight_speed=400, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
@@ -414,9 +412,9 @@ def jolene_run():
     robot.stop()
     turn_robot_left_in_place(30)
     robot.straight(60)
-
-###############
-############### tests 
+#endregion
+#endregion
+#region tests 
 
 def jolene_test():
     #follow_line(line_sensor_right,1450,"FORWARD")
@@ -442,8 +440,9 @@ def gyro_test():
     # gyro_value = gyro_sensor.angle()
     # print("gyro value: ",gyro_value)
 
-###############
+#endregion
 
+#region clibration
 
 def debug_print(*args, **kwargs):
     '''Print debug messages to stderr.
@@ -484,10 +483,13 @@ def calibrate_gyro_offset():
     gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
     print("gyro_offset:",gyro_offset)
    
-
+#endregion
 
 ######## MAIN PROGRAM ##########
 
+#region  main
+
+#region initialize motors an brick
 # Initialize the EV3 Brick.
 ev3 = EV3Brick()
 
@@ -503,11 +505,19 @@ color_sensor = ColorSensor(Port.S1)
 line_sensor_left = ColorSensor(Port.S4)
 line_sensor_right = ColorSensor(Port.S2)
 
+left_motor.reset_angle(0)
+right_motor.reset_angle(0)
+gyro_sensor.reset_angle(0)
+
+# Initialize the drive base.
+robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
+
+
+#endregion
 
 
 
-
-#calibrate_gyro_offset()
+``
 
 # Actions will be used to change which way the robot drives.
 Action = namedtuple('Action ', ['drive_speed', 'steering'])
@@ -522,12 +532,7 @@ TURN_RIGHT = Action(drive_speed=0, steering=70)
 TURN_LEFT = Action(drive_speed=0, steering=-70)
 
 
-left_motor.reset_angle(0)
-right_motor.reset_angle(0)
-gyro_sensor.reset_angle(0)
 
-# Initialize the drive base.
-robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 
 #do the runs
 
@@ -535,12 +540,11 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 print('Hello Gen R !')
 
 
+
 color = color_sensor.color()
 print(color)
+data.log('Color detected',color)
 
-
-#data.log(color)
-#jolene_run()
 
 if(color==Color.WHITE):
     print("Jolene Run")
