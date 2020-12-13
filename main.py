@@ -172,27 +172,28 @@ def follow_line(line_color_sensor,distance,direction):
 
         data.log("gyro value:",gyro_angle)
         wait(10)
-    # while distance_travelled<distance:
-    #     # Calculate the deviation from the threshold.
-    #     deviation = line_color_sensor.reflection() - threshold
-    #     # Calculate the turn rate.
-    #     turn_rate = PROPORTIONAL_GAIN * deviation
-    #     # Set the drive base speed and turn rate.
-    #     robot.drive(DRIVE_SPEED, turn_rate)
-    #     # You can wait for a short time or do other things in this loop.
-    #     distance_travelled  = abs(robot.distance())
-    #     print("distance travelled:",distance_travelled)
-    #     wait(10)
+    return
+    
 
-def drive_straight_with_gyro:
+def drive_straight_with_gyro(distance,direction="FORWARD"):
     # drive for 10 ms
     # check gyro 
     #if angle has changed
     # drive with adjested angle
+    PROPORTIONAL_GAIN = 1.2
+    distance_travelled = 0
+
+    direction_multiplier = -1
+    if(direction=="BACKWARDS"):
+        direction_multiplier = 1
+
+    gyro_angle = gyro_sensor.angle()
+    threshold = gyro_angle
+    DRIVE_SPEED = direction_multiplier*200
 
     while distance_travelled<distance:
         # Calculate the deviation from the threshold.
-        deviation = line_color_sensor.reflection() - threshold
+        deviation = gyro_sensor.angle() - threshold
         # Calculate the turn rate.
         turn_rate = PROPORTIONAL_GAIN * deviation
         # Set the drive base speed and turn rate.
@@ -201,13 +202,9 @@ def drive_straight_with_gyro:
         distance_travelled  = abs(robot.distance())
         print("distance travelled:",distance_travelled)
         data.log("distance travelled:",distance_travelled)
-        gyro_angle = gyro_sensor.angle()
-        
-        if(start_gyro_value==0 and gyro_angle!=0):
-            start_gyro_value = gyro_angle
-            data.log("start gyro value:",gyro_angle)
 
         data.log("gyro value:",gyro_angle)
+        print("gyro value:",gyro_angle)
         wait(10)
     return
 #################
@@ -397,17 +394,19 @@ def debug_print(*args, **kwargs):
 def gyro_test():
     #calibrate_gyro_offset()
 
+    drive_straight_with_gyro(1300)
+
     #while True:
     #    gyro_value = gyro_sensor.angle()
     #    print("gyro value: ",gyro_value)
-    robot.settings(straight_speed=400, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(-150)
-    robot.stop()
-    start_gyro_value = gyro_sensor.angle()
-    print("start gyro value: ",start_gyro_value)
-    turn_robot_in_place("LEFT_FORWARD",90)
-    gyro_value = gyro_sensor.angle()
-    print("gyro value: ",gyro_value)
+    # robot.settings(straight_speed=400, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    # robot.straight(-150)
+    # robot.stop()
+    # start_gyro_value = gyro_sensor.angle()
+    # print("start gyro value: ",start_gyro_value)
+    # turn_robot_in_place("LEFT_FORWARD",90)
+    # gyro_value = gyro_sensor.angle()
+    # print("gyro value: ",gyro_value)
 
 
 
