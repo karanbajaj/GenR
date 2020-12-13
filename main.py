@@ -27,106 +27,56 @@ log.info("Starting Program")
 data = DataLog('time', 'angle', name='my_file', timestamp=False, extension='txt')
 start_gyro_value =0
 
-def jason_run():
-    jason_start_slide()
+################# robot functions
+def turn_robot_left_in_place(angle):
+    turn_robot_in_place("LEFT",angle)
 
-
-def jason_start_slide():
-    #slide
-    #3rd line angle-
-    #drive  backwards for 43 in
-    robot.settings(straight_speed=400, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
-    robot.straight(1092.2)
-    ev3.speaker.beep()
-    robot.stop()
-
-
-    #turn 30 left
-    robot.turn(-30)
-    robot.stop()
-
-    #straight 10 in
-    #drive straight
-    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(254)
-    robot.stop()
-    #turn left 30
-    robot.turn(30)
-    robot.stop()
-    #drive back 32 in
-    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(-812.8)
-    robot.stop()
-
-def jason_step_counter():
-    #turn_robot_in_place("RIGHT_BACKWARD",90)
-    #go forwrd fast
-    robot.settings(straight_speed=400, straight_acceleration=70, turn_rate=10, turn_acceleration=10)
-    robot.straight(-1016)
-    ev3.speaker.beep()
-    robot.stop()
-
-    # # push step counter - super slow to blue 
-    robot.settings(straight_speed=30, straight_acceleration=20, turn_rate=10, turn_acceleration=10)
-    robot.straight(-280.4)
-    robot.stop()
-
-    # #step back from the step counter 
-    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
-    robot.straight(50)
-    robot.stop()
-
-    # #turn left 
-    turn_robot_in_place("RIGHT_BACKWARD",90)
-    #drive forward
-    robot.straight(300)
-
-    robot.straight(-800)
-
-    robot.stop()
-
-def sophie_run():
-    sophie_run_basket_ball()
-
+def turn_robot_right_in_place(angle):
+    turn_robot_in_place("RIGHT",angle)
 
 def turn_robot_in_place(direction,angle):
-    current_gyro_angle=abs(gyro_sensor.angle())
-    data.log("turn_robot_in_place:gyro value:",gyro_sensor.angle())
-    print("turn_robot_in_place:gyro angle start: ", gyro_sensor.angle())
-    gyro_sensor.reset_angle(0)
-    print("gyro angle reset: ", gyro_sensor.angle())
-    current_gyro_angle=abs(gyro_sensor.angle())
-    print("turn_robot_in_place::turning motor: ")
+    current_gyro_angle=gyro_sensor.angle()
+    data.log("turn_robot_in_place:: start (current) gyro value:",current_gyro_angle)
+    print("turn_robot_in_place:: start (current) gyro value: ", current_gyro_angle)
+    #gyro_sensor.reset_angle(0)
+    #print("gyro angle reset: ", gyro_sensor.angle())
+    #current_gyro_angle=abs(gyro_sensor.angle())
+    print("turn_robot_in_place:: calculating direction multipliers")
 
     left_direction = 1
-    right_direction =-1
+    right_direction = -1
+    angle_direction = 1
 
-    if(direction=="RIGHT_BACKWARD" or direction=="LEFT_FORWARD"):
+    if(direction=="LEFT"):
         right_direction = -1
         left_direction = 1
-    if(direction=="RIGHT_FORWARD" or direction=="LEFT_BACKWARD"):
+        angle_direction = -1
+    if(direction=="RIGHT"):
         right_direction = 1
         left_direction = -1
+        angle_direction = 1
     
-    print("turn_robot_in_place::direction: ",direction)
+    print("turn_robot_in_place:: turning robot in direction: ",direction)
 
-    angle_we_want=angle
+    angle_we_want = current_gyro_angle + angle * angle_direction
     
-    print("turn_robot_in_place::current_gyro_angle: ",current_gyro_angle)
-    print("turn_robot_in_place::angle: ",angle)
+   
+    print("turn_robot_in_place::angle reguested: ",angle) 
     print("turn_robot_in_place::angle_we_want: ",angle_we_want)
-    data.log("turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
-    data.log("turn_robot_in_place:angle_we_want:",angle_we_want)
+ 
+    data.log("turn_robot_in_place::angle reguested: ",angle) 
+    data.log("turn_robot_in_place::angle_we_want: ",angle_we_want)
+    
     
 
-    #robot.turn(45)
+   
     while( current_gyro_angle <angle_we_want*0.85):
         #
         left_motor.run(200*left_direction)
         right_motor.run(200*right_direction)
         wait(10)
         current_gyro_angle= abs(gyro_sensor.angle())
-        print("gyro angle end1 : ", current_gyro_angle)
+        print("turn_robot_in_place::gyro angle 85%: ", current_gyro_angle)
         data.log("0.85:turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
         data.log("0.85:turn_robot_in_place:angle_we_want:",angle_we_want)
     
@@ -136,7 +86,7 @@ def turn_robot_in_place(direction,angle):
         right_motor.run(100*right_direction)
         wait(10)    
         current_gyro_angle= abs(gyro_sensor.angle())
-        print("gyro angle end2 : ", current_gyro_angle)
+        print("turn_robot_in_place::gyro angle 99%: ", current_gyro_angle)
         data.log("0.99:turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
         data.log("0.99:turn_robot_in_place:angle_we_want:",angle_we_want)
 
@@ -147,8 +97,8 @@ def turn_robot(direction,angle):
     current_gyro_angle=abs(gyro_sensor.angle())
 
     print("gyro angle start: ", gyro_sensor.angle())
-    gyro_sensor.reset_angle(0)
-    print("gyro angle reset: ", gyro_sensor.angle())
+    #gyro_sensor.reset_angle(0)
+    #print("gyro angle reset: ", gyro_sensor.angle())
     print("turning motor: ")
 
     motor = left_motor
@@ -166,7 +116,7 @@ def turn_robot(direction,angle):
         motor = right_motor 
         direction=-1
     
-    angle_we_want=angle
+    angle_we_want=angle+current_gyro_angle
     #robot.turn(45)
     while( current_gyro_angle <angle_we_want*0.90):
         #
@@ -234,6 +184,96 @@ def follow_line(line_color_sensor,distance,direction):
     #     print("distance travelled:",distance_travelled)
     #     wait(10)
 
+def drive_straight_with_gyro:
+    # drive for 10 ms
+    # check gyro 
+    #if angle has changed
+    # drive with adjested angle
+
+    while distance_travelled<distance:
+        # Calculate the deviation from the threshold.
+        deviation = line_color_sensor.reflection() - threshold
+        # Calculate the turn rate.
+        turn_rate = PROPORTIONAL_GAIN * deviation
+        # Set the drive base speed and turn rate.
+        robot.drive(DRIVE_SPEED, turn_rate)
+        # You can wait for a short time or do other things in this loop.
+        distance_travelled  = abs(robot.distance())
+        print("distance travelled:",distance_travelled)
+        data.log("distance travelled:",distance_travelled)
+        gyro_angle = gyro_sensor.angle()
+        
+        if(start_gyro_value==0 and gyro_angle!=0):
+            start_gyro_value = gyro_angle
+            data.log("start gyro value:",gyro_angle)
+
+        data.log("gyro value:",gyro_angle)
+        wait(10)
+    return
+#################
+
+#################runs
+
+def jason_run():
+    jason_start_slide()
+
+def jason_start_slide():
+    #slide
+    #3rd line angle-
+    #drive  backwards for 43 in
+    robot.settings(straight_speed=400, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
+    robot.straight(1092.2)
+    ev3.speaker.beep()
+    robot.stop()
+
+
+    #turn 30 left
+    robot.turn(-30)
+    robot.stop()
+
+    #straight 10 in
+    #drive straight
+    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(254)
+    robot.stop()
+    #turn left 30
+    robot.turn(30)
+    robot.stop()
+    #drive back 32 in
+    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(-812.8)
+    robot.stop()
+
+def jason_step_counter():
+    #turn_robot_in_place("RIGHT_BACKWARD",90)
+    #go forwrd fast
+    robot.settings(straight_speed=400, straight_acceleration=70, turn_rate=10, turn_acceleration=10)
+    robot.straight(-1016)
+    ev3.speaker.beep()
+    robot.stop()
+
+    # # push step counter - super slow to blue 
+    robot.settings(straight_speed=30, straight_acceleration=20, turn_rate=10, turn_acceleration=10)
+    robot.straight(-280.4)
+    robot.stop()
+
+    # #step back from the step counter 
+    robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(50)
+    robot.stop()
+
+    # #turn left 
+    turn_robot_in_place("RIGHT_BACKWARD",90)
+    #drive forward
+    robot.straight(300)
+
+    robot.straight(-800)
+
+    robot.stop()
+
+def sophie_run():
+    sophie_run_basket_ball()
+
 def sophie_run_basket_ball():
     # basketball- 27 in. forward - <3 90 degree turn left - inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
     #drive straight
@@ -253,7 +293,6 @@ def sophie_run_basket_ball():
         
     wait(10)
     robot.stop()
-
 
 def jolene_run():
     #go forwrd fast
@@ -330,7 +369,7 @@ def jolene_run():
     robot.straight(150)
     robot.stop()
     #turn obot 35 degrees
-    turn_robot_in_place("LEFT_FORWARD",28)
+    turn_robot_left_in_place(28)
     robot.stop()
     #go torwards row machine
     robot.straight(-260)
@@ -339,14 +378,14 @@ def jolene_run():
     frnt_left_motor.run_target(500, -1100)
     robot.straight(150)
     robot.stop()
-    turn_robot_in_place("LEFT_FORWARD",30)
+    turn_robot_left_in_place(30)
     robot.straight(60)
 
 def jolene_test():
     #follow_line(line_sensor_right,1450,"FORWARD")
     #frnt_right_motor.run_target(500, 3,468)
     frnt_left_motor.run_target(500, -900)
-
+###############
 
 
 def debug_print(*args, **kwargs):
@@ -354,6 +393,22 @@ def debug_print(*args, **kwargs):
     This shows up in the output panel in VS Code.
     '''
     print(*args, **kwargs, file=sys.stderr)
+
+def gyro_test():
+    #calibrate_gyro_offset()
+
+    #while True:
+    #    gyro_value = gyro_sensor.angle()
+    #    print("gyro value: ",gyro_value)
+    robot.settings(straight_speed=400, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.straight(-150)
+    robot.stop()
+    start_gyro_value = gyro_sensor.angle()
+    print("start gyro value: ",start_gyro_value)
+    turn_robot_in_place("LEFT_FORWARD",90)
+    gyro_value = gyro_sensor.angle()
+    print("gyro value: ",gyro_value)
+
 
 
 #start ############################################################ 
@@ -363,6 +418,7 @@ GYRO_OFFSET_FACTOR = 0.0005
 def calibrate_gyro_offset():
     global gyro_offset
 
+    gyro_sensor.reset_angle(0)
     # Calibrate the gyro offset. This makes sure that the robot is perfectly
     # still by making sure that the measured rate does not fluctuate more than
     # 2 deg/s. Gyro drift can cause the rate to be non-zero even when the robot
@@ -384,6 +440,7 @@ def calibrate_gyro_offset():
             break
     gyro_offset = gyro_sum / GYRO_CALIBRATION_LOOP_COUNT
     print("gyro_offset:",gyro_offset)
+   
 
 
 ######## MAIN PROGRAM ##########
@@ -403,6 +460,9 @@ color_sensor = ColorSensor(Port.S1)
 line_sensor_left = ColorSensor(Port.S4)
 line_sensor_right = ColorSensor(Port.S2)
 
+
+
+gyro_sensor.reset_angle(0)
 
 #calibrate_gyro_offset()
 
@@ -453,7 +513,8 @@ elif(color==Color.RED):
     sophie_run()
 
 else:
-    jolene_run()
+    gyro_test()
+    #jolene_run()
 
 # Turn clockwise by 360 degrees and back again.
 # robot.turn(360)
