@@ -96,8 +96,23 @@ def turn_robot_in_place(direction,angle):
         data.log("0.99:turn_robot_in_place:current_gyro_angle:",gyro_sensor.angle())
         data.log("0.99:turn_robot_in_place:current_abs_angle:",current_abs_angle)
 
+    data.log("turn_robot_in_place:done",current_abs_angle)
+
     left_motor.stop()
     right_motor.stop()
+
+def gyro_straighten_robot(start_gyro_value):
+    #strIGHTEN THE ROBOT
+    end_gyro_value =  gyro_sensor.angle()
+    gyro_angle_diff = end_gyro_value - start_gyro_value
+    direction = "LEFT"
+    if(gyro_angle_diff<0):
+        direction="RIGHT"
+
+    data.log("gyro_straighten_robot::gyro angle diff ",gyro_angle_diff)
+    data.log("gyro_straighten_robot::direction",direction)
+
+    turn_robot_in_place(direction,abs(gyro_angle_diff))
 
 def turn_robot(direction,angle):
     current_gyro_angle=abs(gyro_sensor.angle())
@@ -164,9 +179,11 @@ def follow_line(line_color_sensor,distance,direction,speed):
         drive_speed =400
     elif(speed=="FAST"):
         drive_speed =200
+    elif(speed=="NORMAL"):
+        drive_speed =150
     elif(speed=="SLOW"):
         drive_speed =100
-    elif(speed=="SUPER_SLOW"):
+    elif(speed=="SUPERSLOW"):
         drive_speed =50
 
 
@@ -309,21 +326,35 @@ def sophie_run_basket_ball():
     
     #drive fwd
     #drive_straight_with_gyro(-450)
-    robot.straight(-250)
+    robot.straight(-175)
     robot.stop()
-
-    follow_line(line_sensor_right,1275,"FORWARD","FAST")
-    follow_line(line_sensor_right,1275,"FORWARD","SUPERSLOW")
-    
+    data.log("Following line at fast speed")  
+    follow_line(line_sensor_right,400,"FORWARD","FAST")
+    robot.stop()
+    ev3.speaker.beep()
+    #turn_robot_in_place("LEFT",30)
+    #follow_line(line_sensor_right,975,"FORWARD","SUPERSLOW")
+    data.log("Following line at slow speed")  
+    follow_line(line_sensor_right,675,"FORWARD","SUPERSLOW")
+    ev3.speaker.beep()
+    data.log("Following line at normal speed")  
+    follow_line(line_sensor_right,975,"FORWARD","NORMAL")
+    robot.stop()
 
     #turn robot to face the basketball mission
-    turn_robot_in_place("LEFT",30)
+    data.log("turning robot to 25")  
+    turn_robot_in_place("LEFT",25)
     robot.stop()
-        
-        
-        
-    wait(10)
+    robot.straight(-215)
     robot.stop()
+    frnt_left_motor.run_target(500, 5800)
+    robot.stop()
+    frnt_left_motor.run_target(500, -1000)
+    robot.straight(215)
+    
+    
+    
+    
 #endregion
 #region  jolene's run
 def jolene_run():
@@ -517,7 +548,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 
 
 
-``
+
 
 # Actions will be used to change which way the robot drives.
 Action = namedtuple('Action ', ['drive_speed', 'steering'])
@@ -538,8 +569,6 @@ TURN_LEFT = Action(drive_speed=0, steering=-70)
 
 #data = DataLog('color')
 print('Hello Gen R !')
-
-
 
 color = color_sensor.color()
 print(color)
@@ -564,9 +593,4 @@ else:
     #jolene_run()
     jason_run()
 
-# Turn clockwise by 360 degrees and back again.
-# robot.turn(360)
-# ev3.speaker.beep()
-
-# robot.turn(-360)
-# ev3.speaker.beep()
+#endregion
