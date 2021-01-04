@@ -18,6 +18,8 @@ from pybricks.parameters import Port, Button, Color, ImageFile, SoundFile, Stop
 from pybricks.robotics import DriveBase
 from ucollections import namedtuple
 from pybricks.tools import wait, StopWatch, DataLog
+from threading import Thread
+import sys
 
 # Logging
 logging.basicConfig(level=logging.DEBUG,
@@ -148,10 +150,10 @@ def turn_robot(direction,angle):
     
     #motor.hold()
     wait(10)
-    current_gyro_angle= abs(gyro_sensor.angle())
+    current_gyro_angle= abs(gyro_sesor.angle())
         
     while( current_gyro_angle <angle_we_want*0.99):
-        #
+        #n
         motor.run(direction*200)
         current_gyro_angle= abs(gyro_sensor.angle())
         print("gyro angle end2 : ", current_gyro_angle)
@@ -174,17 +176,22 @@ def follow_line(line_color_sensor,distance,direction,speed):
         direction_multiplier = 1
      
     drive_speed= 200   
-
-    if(speed == "SUPERFAST"):
-        drive_speed =400
+    if(speed == "SUPERDUPERFAST"):
+        drive_speed=400
+    elif(speed == "SUPERFAST"):
+        drive_speed =300
+    elif(speed == "MEDIUMFAST"):
+        drive_speed =250
     elif(speed=="FAST"):
         drive_speed =200
     elif(speed=="NORMAL"):
         drive_speed =150
     elif(speed=="SLOW"):
         drive_speed =100
+        PROPORTIONAL_GAIN =1.1
     elif(speed=="SUPERSLOW"):
         drive_speed =50
+        PROPORTIONAL_GAIN =1.05
 
 
     DRIVE_SPEED = direction_multiplier*drive_speed
@@ -316,6 +323,11 @@ def jason_step_counter():
 def sophie_run():
     sophie_run_basket_ball()
 
+def beep():
+    ev3.speaker.beep()
+    
+def front_motor_down(speed,position):
+    frnt_left_motor.run_target(speed,position)
 def sophie_run_basket_ball():
     # basketball- 27 in. forward - <3 90 degree turn left - inches forward - (-30 mm) turn - raise bar() -lower bar() - turn 30 degrees- lift bar(baccia) -   
     #drive straight
@@ -325,39 +337,69 @@ def sophie_run_basket_ball():
 
     #robot.settings(straight_speed=150, straight_acceleration=50, turn_rate=100, turn_acceleration=150)
     print("Sophie Basket ball Run")  
-    robot.settings(straight_speed=500, straight_acceleration=150, turn_rate=10, turn_acceleration=10)
+    robot.settings(straight_speed=1400, straight_acceleration=150, turn_rate=10, turn_acceleration=10)
     
     #drive fwd
     #drive_straight_with_gyro(-450)
-    robot.straight(-175)
+    robot.straight(-375)
     robot.stop()
+    print("Follow line")  
+    
     data.log("Following line at fast speed")  
-    follow_line(line_sensor_right,400,"FORWARD","FAST")
+    follow_line(line_sensor_right,200,"FORWARD","FAST")
     robot.stop()
-    ev3.speaker.beep()
+    t=Thread(target=beep).start()
+   
     #turn_robot_in_place("LEFT",30)
     #follow_line(line_sensor_right,975,"FORWARD","SUPERSLOW")
     data.log("Following line at slow speed")  
-    follow_line(line_sensor_right,675,"FORWARD","SUPERSLOW")
-    ev3.speaker.beep()
+    follow_line(line_sensor_right,575,"FORWARD","SUPERSLOW")
+    t=Thread(target=beep).start()
+    
     data.log("Following line at normal speed")  
-    follow_line(line_sensor_right,975,"FORWARD","NORMAL")
+    follow_line(line_sensor_right,875,"FORWARD","SUPERFAST")
+    robot.stop()
+    follow_line(line_sensor_right,975,"FORWARD","SLOW")
     robot.stop()
 
     #turn robot to face the basketball mission
-    data.log("turning robot to 15")  
-    turn_robot_in_place("LEFT",15)
+    data.log("turning robot to 20")  
+    turn_robot_in_place("LEFT",20)
     robot.stop()
-    robot.straight(-255)
+    robot.straight(-245)
     robot.stop()
-    
+    #go up
     frnt_left_motor.run_target(1000, 5800)
     robot.stop()
-    frnt_left_motor.run_target(1500, 2800)
+    #go down
+    
+    Thread(target=front_motor_down,args=(1500,2800)).start()
+    
+    wait(300)
+    
+    #go back a little
     robot.straight(115)
     robot.stop()
-    turn_robot_in_place("LEFT",30)
-    robot.straight(-915)
+    turn_robot_in_place("RIGHT",78)
+    # go forward a little
+    # robot.straight(-55)
+    # robot.stop()
+
+    # frnt_left_motor.run_target(1000, 3000)
+    # robot.stop()
+
+    # turn_robot_in_place("RIGHT",70)
+    robot.straight(-415)
+    robot.stop()
+
+    frnt_right_motor.run_target(1500, -200)
+    robot.stop()
+
+    robot.settings(straight_speed=1400, straight_acceleration=350, turn_rate=10, turn_acceleration=10)
+    robot.straight(415)
+    robot.stop()
+    turn_robot_in_place("LEFT",15)
+    robot.straight(1175)
     robot.stop()
     
 def sophie_bench():
@@ -370,7 +412,7 @@ def sophie_bench():
     robot.straight(-450)
     #ev3.speaker.beep()
     robot.stop()
-
+    robot.settings(straight_speed=1400, straight_acceleration=350, turn_rate=10, turn_acceleration=10)
     robot.straight(600)
     robot.stop()
 
@@ -412,7 +454,7 @@ def jolene_run():
     #get gyro value
     global start_gyro_value
 
-    robot.settings(straight_speed=400, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    robot.settings(straight_speed=500, straight_acceleration=500, turn_rate=10, turn_acceleration=10)
     robot.straight(-150)
     robot.stop()
     gyro_sensor.reset_angle(0)
@@ -420,9 +462,31 @@ def jolene_run():
     print("start gyro value: ",start_gyro_value)
     data.log("start_gyro_value",start_gyro_value)
 
-
-    follow_line(line_sensor_right,1775,"FORWARD","FAST")
-    
+    follow_line(line_sensor_right,475,"FORWARD","SUPERFAST")    # follow_line(line_sensor_right,1575,"FORWARD","SUPERFAST")
+    ev3.speaker.beep()
+    # wait(2)
+    # robot.stop()
+    # follow_line(line_sensor_right,1775,"FORWARD","NORMAL")
+    # robot.settings(straight_speed=600, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
+    # robot.straight(-1975)
+    # wait(2)
+    # robot.stop()
+    robot.stop()
+    follow_line(line_sensor_right,700,"FORWARD","FAST")
+    ev3.speaker.beep()
+    robot.stop()
+    follow_line(line_sensor_right,1275,"FORWARD","SUPERFAST")
+    ev3.speaker.beep()
+    robot.stop()
+    follow_line(line_sensor_right,1500,"FORWARD","FAST") 
+    ev3.speaker.beep()
+    robot.stop()
+    follow_line(line_sensor_right,1750,"FORWARD","MEDIUMFAST") 
+    robot.stop()
+    ev3.speaker.beep()
+    follow_line(line_sensor_right,1950,"FORWARD","SUPERSLOW") 
+    robot.stop()
+    ev3.speaker.beep()
     #get the gyro value to see where we are
     end_gyro_value =  gyro_sensor.angle()
     
@@ -430,52 +494,66 @@ def jolene_run():
     data.log("start gyro_alue",start_gyro_value)
     data.log("end gyro value",end_gyro_value)
 
-    ev3.speaker.beep()
    
     
-    #strIGHTEN THE ROBOT
+    
+    #straighten THE ROBOT
     gyro_angle_diff = end_gyro_value - start_gyro_value
-    direction = "LEFT_FORWARD"
+    direction = "RIGHT"
     if(gyro_angle_diff<0):
-        direction="RIGHT_FORWARD"
+        direction="LEFT"
 
     data.log("gyro angle diff ",gyro_angle_diff)
     data.log("direction",direction)
 
-    turn_robot_in_place(direction,abs(gyro_angle_diff))
-    robot.stop()
+    #turn_robot_in_place("direction",abs(gyro_angle_diff))
+    #turn_robot_in_place("LEFT",5)
+    #ev3.speaker.beep()
+    
+    robot.settings(straight_speed=350, straight_acceleration=50, turn_rate=10, turn_acceleration=10)
     #ROBOT GO FORWARD
-    robot.straight(-160)
-    robot.stop()
+    #robot.straight(-50)
+    #robot.stop()?
     #right motor turn
-    frnt_right_motor.run_target(5000, 3600)
+    frnt_right_motor.run_target(5000, 1600)
     robot.stop()
+    robot.settings(straight_speed=500, straight_acceleration=100, turn_rate=10, turn_acceleration=10)
     #going backward 
-    robot.straight(150)
+    robot.straight(80)
     robot.stop()
     #turn obot 35 degrees
-    turn_robot_left_in_place(28)
+    turn_robot_left_in_place(24)
     robot.stop()
     #go torwards row machine
-    robot.straight(-240)
+    robot.straight(-220)
     robot.stop()
     #bring down the hook
-    frnt_left_motor.run_target(500, -1100)
+    frnt_left_motor.run_target(1500, -1000)
     robot.straight(140)
     robot.stop()
     # turn_robot_left_in_place(30)
-    turn_robot_in_place("LEFT",30)
-    robot.straight(-30)
+    turn_robot_in_place("LEFT",20)
+    robot.straight(-60)
     robot.stop()
-    frnt_left_motor.run_target(500, 100)
-    robot.straight(50)
+    #bring up the hook
+    Thread(target=front_motor_down,args=(1500,100)).start()
+
+
+    #frnt_left_motor.run_target(1500, 100)
+    # start going back
+    robot.straight(55)
     robot.stop()
-    turn_robot_in_place("RIGHT",30)
-    robot.settings(straight_speed=1000, straight_acceleration=300, turn_rate=10, turn_acceleration=10)
+   
+    turn_robot_in_place("RIGHT",27)
+    
+    robot.settings(straight_speed=5000, straight_acceleration=1000, turn_rate=10, turn_acceleration=10)
+    
     robot.straight(200)
     robot.stop()
-    turn_robot_in_place("RIGHT",22)
-    robot.straight(2500)
+
+    turn_robot_in_place("RIGHT",19)
+    robot.settings(straight_speed=5000, straight_acceleration=1000, turn_rate=10, turn_acceleration=10)
+    robot.straight(2200)
     robot.stop()
 #endregion
 #endregion
@@ -487,8 +565,8 @@ def jolene_test():
     frnt_left_motor.run_target(500, -900)
 
 def front_motor_test():
-    frnt_left_motor.run_target(1500, 5800)
-    frnt_left_motor.run_target(1500, 2800)
+    frnt_right_motor.run_target(5000, 2000)
+  
 
 
 def gyro_test():
@@ -565,8 +643,16 @@ def reset_robot_motors_and_gyro():
     frnt_right_motor.reset_angle(0)
     robot.reset()
 
+def stop_motors():
+    robot.stop()
+   
+    
+    frnt_left_motor.stop()
+    frnt_right_motor.stop()
+   
 
 def run_on_color():
+    color_sensor = ColorSensor(Port.S1)
     color = color_sensor.color()
     print(color)
     data.log('Color detected',color)
@@ -628,7 +714,7 @@ frnt_left_motor = Motor(Port.B)
 frnt_right_motor = Motor(Port.A) 
 
 gyro_sensor = GyroSensor(Port.S3)
-color_sensor = ColorSensor(Port.S1)
+
 line_sensor_left = ColorSensor(Port.S4)
 line_sensor_right = ColorSensor(Port.S2)
 
@@ -665,9 +751,12 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=53, axle_track=120)
 
 #data = DataLog('color')
 print('Hello Gen R !')
+ev3.light.on(Color.RED)
+
 # cancel_button = false
 no_of_times_up_pressed = 0
 no_of_times_down_pressed = 0
+t=Thread(target=sophie_run_basket_ball)
 
 while True:
     center_pressed = Button.CENTER in ev3.buttons.pressed()
@@ -678,22 +767,26 @@ while True:
     if center_pressed:
         print("center button pressed",center_pressed)
         center_pressed=False
+        #front_motor_test()
+        #stop_motors()
         reset_robot_motors_and_gyro()
-        run_on_color()
+        Thread(target=front_motor_down,args=(1500,200)).start()
+        #t=Thread(target=front_motor_test)
+        
         wait(1000)
     elif up_pressed:
         print("up button pressed",up_pressed)
         up_pressed=False
         no_of_times_up_pressed = no_of_times_up_pressed +1
         reset_robot_motors_and_gyro()
-        
-        
+
         if(no_of_times_up_pressed==1):
+            print("sophie_bsktball",up_pressed)
+            t=Thread(target=sophie_run_basket_ball)
+            t.start()
+        else:
             print("sophie_bench",up_pressed)
             sophie_bench()
-        else:
-            print("sophie_bsktball",up_pressed)
-            sophie_run_basket_ball()
         wait(1000)
 
     elif down_pressed:
@@ -711,12 +804,14 @@ while True:
         wait(1000)
 
     elif left_pressed:
-        print("left button pressed",down_pressed)
+        print("left button pressed",left_pressed)
         left_pressed=False
         reset_robot_motors_and_gyro()
         print("jolene run",up_pressed)
-        front_motor_test()
-        #jolene_run()
+        #front_motor_test()
+        t=Thread(target=jolene_run)
+        t.start()
+        
         wait(1000)
 
 
